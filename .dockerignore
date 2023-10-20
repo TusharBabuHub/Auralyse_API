@@ -1,0 +1,5 @@
+.git/
+.idea/
+instance/
+__pycache__/
+auralyse_new/

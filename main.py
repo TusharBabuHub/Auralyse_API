@@ -1,22 +1,38 @@
-from flask import Flask, jsonify, request
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+# The code is importing necessary modules and libraries for building a Flask application.
+import zipfile
+import librosa
 import traceback
 import pandas as pd
 import numpy as np
 import tensorflow as tf
-import librosa
+import io, os, emoji, base64
+from flask import Flask, jsonify, request, send_file
 from pydub import AudioSegment
 from pydub.utils import make_chunks
-import io, os, emoji, base64
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
 
 def process_audio(audio, samplerate=16000):
-    '''Convert Audio into required format for tflite model to assess'''
+    """
+    The function `process_audio` takes an audio file and converts it into the required format for a
+    tflite model to assess by extracting MFCC features and ensuring the shape matches the model input
+    shape.
+    
+    :param audio: The audio parameter is the input audio data that you want to process. It should be in
+    a format that can be converted to a numpy array, such as an audio file or an audio stream
+    :param samplerate: The samplerate parameter specifies the sample rate of the audio signal. It is
+    typically measured in Hz (samples per second). In this case, the default value is set to 16000 Hz,
+    defaults to 16000 (optional)
+    :return: the processed audio in the required format for the tflite model to assess. The processed
+    audio is represented as a numpy array with shape (1, 59, 13), where 1 is the batch dimension, 59 is
+    the time steps, and 13 is the number of MFCC features.
+    """
+    """Convert Audio into required format for tflite model to assess"""
     # convert to numpy array
     snippet = np.array(audio.get_array_of_samples())
 
@@ -44,7 +60,19 @@ def process_audio(audio, samplerate=16000):
 
 
 def create_circumplex_chart(valence, arousal, emotion_label):
-    '''Display results as visualisations'''
+    """
+    The `create_circumplex_chart` function creates a circumplex chart visualizing emotions based on
+    valence and arousal values.
+    
+    :param valence: Valence represents the emotional positivity or negativity of an emotion. It ranges
+    from -1 (negative) to 1 (positive)
+    :param arousal: A measure of the intensity or activation level of an emotion. It ranges from low
+    arousal (calm, relaxed) to high arousal (excited, agitated)
+    :param emotion_label: The emotion label is a string that represents the predicted emotion for the
+    given valence and arousal values. It is used to annotate the chart with the predicted emotion label
+    :return: a byte array that represents the generated circumplex chart image.
+    """
+    """Display results as visualisations"""
     fig, ax = plt.subplots(figsize=(8, 8))
 
     # Set the background to black
@@ -148,35 +176,38 @@ def create_circumplex_chart(valence, arousal, emotion_label):
 
     return byte_arr.getvalue()
 
-
 @app.route("/", methods=["GET"])
 def home():
     # Test API
     return "Hello, World!"
 
-
 @app.route("/predict", methods=["POST"])
 def predict():
+    """
+    The `predict` function is an API endpoint that takes an audio file, processes it, and returns a zip
+    file containing plots of emotion predictions for each slice of the audio.
+    :return: The code is returning a zip file containing plots generated from the audio file.
+    """
     # Main API for prediction
     try:
         # initialise path to save audio for processing
-        #save_path = os.path.join(
+        # save_path = os.path.join(
         #    os.path.dirname(os.path.abspath(__file__)),
         #    "temp",
         #    "temp.wav",
-        #)
-        
+        # )
+
         speech = io.BytesIO()
         speech.seek(0)
-        
+
         # get the audio file from API request message
         # save it to the server
-        #audio_file = request.files["file"].save(save_path)
+        # audio_file = request.files["file"].save(save_path)
         audio_file = request.files["file"].save(speech)
-        
+
         speech = AudioSegment.from_wav(speech)
-        #speech = AudioSegment.from_wav(save_path)
-        
+        # speech = AudioSegment.from_wav(save_path)
+
         speech = speech.set_channels(1)
 
         # Slice speech at the event of silence
@@ -194,49 +225,64 @@ def predict():
             6: "surprise",
         }
 
-        for audio in speech_slices:
-            # Load the TFLite model and allocate tensors.
-            interpreter = tf.lite.Interpreter(
-                model_path=os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)),
-                    "models",
-                    "model4.tflite",
+        # Create a new BytesIO object for the zip file
+        zip_buffer = io.BytesIO()
+        # Create a ZipFile object
+        with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+            for slice_count, audio in enumerate(speech_slices):
+                # Load the TFLite model and allocate tensors.
+                interpreter = tf.lite.Interpreter(
+                    model_path=os.path.join(
+                        os.path.dirname(os.path.abspath(__file__)),
+                        "models",
+                        "model4.tflite",
+                    )
                 )
-            )
 
-            interpreter.allocate_tensors()
+                interpreter.allocate_tensors()
 
-            # Get input and output tensors.
-            input_details = interpreter.get_input_details()
-            output_details = interpreter.get_output_details()
+                # Get input and output tensors.
+                input_details = interpreter.get_input_details()
+                output_details = interpreter.get_output_details()
 
-            output_details = sorted(output_details, key=lambda x: x["name"])
+                output_details = sorted(output_details, key=lambda x: x["name"])
 
-            # Test the model on sliced audio.
-            input_data = process_audio(audio)
-            interpreter.set_tensor(input_details[0]["index"], input_data)
+                # Test the model on sliced audio.
+                input_data = process_audio(audio)
+                interpreter.set_tensor(input_details[0]["index"], input_data)
 
-            interpreter.invoke()
+                interpreter.invoke()
 
-            # The function `get_tensor()` returns a copy of the tensor data.
-            # Use `tensor()` in order to get a pointer to the tensor.
-            predictions = [
-                interpreter.get_tensor(output["index"]) for output in output_details
-            ]
+                # The function `get_tensor()` returns a copy of the tensor data.
+                # Use `tensor()` in order to get a pointer to the tensor.
+                predictions = [
+                    interpreter.get_tensor(output["index"]) for output in output_details
+                ]
 
-            valence_score = predictions[0][0][0]
-            arousal_score = predictions[2][0][0]
-            emotion_label = np.argmax(predictions[1][0])
-            encoded_img = create_circumplex_chart(
-                valence_score, arousal_score, emotion_mapping[emotion_label]
-            )
-            decoded_img = base64.b64encode(encoded_img).decode()
-            plot_imgs.append(decoded_img)
-            # print(f"Model {i+1} Predictions:")
-            # print(f"  Valence Score: {valence_score}")
-            # print(f"  Arousal Score: {arousal_score}")
-            # print(f"  Predicted Emotion: {emotion_mapping[emotion_label]}")
-        return jsonify({"images": plot_imgs})
+                valence_score = predictions[0][0][0]
+                arousal_score = predictions[2][0][0]
+                emotion_label = np.argmax(predictions[1][0])
+                encoded_img = create_circumplex_chart(
+                    valence_score, arousal_score, emotion_mapping[emotion_label]
+                )
+                # Write the plot to the ZipFile with a unique name
+                zip_file.writestr(f"plot_{slice_count}.png", encoded_img)
+
+                # decoded_img = base64.b64encode(encoded_img).decode()
+                # plot_imgs.append(decoded_img)
+
+                # print(f"Model {i+1} Predictions:")
+                # print(f"  Valence Score: {valence_score}")
+                # print(f"  Arousal Score: {arousal_score}")
+                # print(f"  Predicted Emotion: {emotion_mapping[emotion_label]}")
+        zip_buffer.seek(0)
+
+        return send_file(
+            zip_buffer,
+            mimetype="application/zip",
+            as_attachment=True,
+            download_name="plots.zip",
+        )
     except:
         return jsonify({"trace": traceback.format_exc()})
 
@@ -254,3 +300,4 @@ if __name__ == "__main__":
        Based on these values a visualisation is created for every one second of the speech.
        This is provided as an output. 
     """
+
