@@ -2,10 +2,10 @@
 FROM --platform=$BUILDPLATFORM intel/intel-optimized-tensorflow:2.13-pip-base
 
 # Set the working directory in the container to /app
-WORKDIR /app
+WORKDIR /
 
 # Copy the current directory contents into the container at /app
-ADD . /app
+ADD . /
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
