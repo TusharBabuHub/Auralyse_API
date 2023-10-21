@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.4
-FROM --platform=$BUILDPLATFORM intel/intel-optimized-tensorflow:latest
+FROM --platform=$BUILDPLATFORM intel/intel-optimized-tensorflow:2.13-pip-base
 
 # Set the working directory in the container to /app
 WORKDIR /app
