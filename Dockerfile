@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.4
-FROM --platform=$BUILDPLATFORM intel/intel-optimized-tensorflow:latest
+FROM --platform=$BUILDPLATFORM python/debian:11
 
 # Set the working directory in the container to /app
 WORKDIR /
