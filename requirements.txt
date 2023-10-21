@@ -1,3 +1,4 @@
+pip==23.3.1
 absl-py==2.0.0
 astunparse==1.6.3
 audioread==3.0.1
@@ -68,7 +69,7 @@ tensorflow-intel
 tensorflow-io-gcs-filesystem
 termcolor==2.3.0
 threadpoolctl==3.2.0
-typing_extensions==3.6.6
+typing_extensions==4.1.1
 urllib3==2.0.7
 Werkzeug==3.0.0
 wrapt==1.14.1
