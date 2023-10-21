@@ -2,7 +2,6 @@
 import zipfile
 import librosa
 import traceback
-import pandas as pd
 import numpy as np
 import tensorflow as tf
 import io, os, emoji, base64
