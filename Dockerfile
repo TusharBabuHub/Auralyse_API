@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.4
-FROM --platform=$BUILDPLATFORM tensorflow/tensorflow:2.14.0
+FROM --platform=$BUILDPLATFORM tensorflow/serving:2.14.0-rc0-devel-gpu
 
 # Set the working directory in the container to /app
 WORKDIR /
