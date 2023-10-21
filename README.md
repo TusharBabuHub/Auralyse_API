@@ -1,9 +1,6 @@
 # Auralyse_API
 
-A Flask API to load audio and get back valence arousal chart  
+A Flask API to load .wav audio and get back valence arousal charts for each second of it.  
 
-This is now loaded at back4app based on https://blog.back4app.com/how-to-build-and-deploy-a-python-application  
-
-The docker image was built as docker build -t auralyse-api:1.0 .  
-
+The API has been applied along with Docker Intel Tensorflow image 
 
