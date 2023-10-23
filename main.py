@@ -189,28 +189,19 @@ def predict():
     """
     # Main API for prediction
     try:
-        # initialise path to save audio for processing
-        # save_path = os.path.join(
-        #    os.path.dirname(os.path.abspath(__file__)),
-        #    "temp",
-        #    "temp.wav",
-        # )
 
         speech = io.BytesIO()
         speech.seek(0)
 
         # get the audio file from API request message
         # save it to the server
-        # audio_file = request.files["file"].save(save_path)
         audio_file = request.files["file"].save(speech)
 
         speech = AudioSegment.from_wav(speech)
-        # speech = AudioSegment.from_wav(save_path)
 
         speech = speech.set_channels(1)
 
-        # Slice speech at the event of silence
-        # speech_slices = split_on_silence(speech)
+        # Slice speech to eaach second
         speech_slices = make_chunks(speech, 1000)
 
         plot_imgs = []
@@ -267,13 +258,6 @@ def predict():
                 # Write the plot to the ZipFile with a unique name
                 zip_file.writestr(f"plot_{slice_count}.png", encoded_img)
 
-                # decoded_img = base64.b64encode(encoded_img).decode()
-                # plot_imgs.append(decoded_img)
-
-                # print(f"Model {i+1} Predictions:")
-                # print(f"  Valence Score: {valence_score}")
-                # print(f"  Arousal Score: {arousal_score}")
-                # print(f"  Predicted Emotion: {emotion_mapping[emotion_label]}")
         zip_buffer.seek(0)
 
         return send_file(
