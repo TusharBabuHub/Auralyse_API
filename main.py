@@ -2,6 +2,7 @@
 import zipfile
 import librosa
 import traceback
+import time
 import numpy as np
 import tensorflow as tf
 import io, os, emoji, base64
@@ -275,8 +276,11 @@ if __name__ == "__main__":
         port = int(sys.argv[1])  # This is for a command-line input  # noqa: F821
     except:
         port = 12345  # If you don't provide any port the port will be set to 12345
-
+    start_time = time.time()
     app.run(debug=False)
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print(f"Execution time: {execution_time} seconds")
     """This API is created to analyse audio and fond the emotions embedded in it.
        To do so, the audio is processed and passed through a tflite model.
        This model provides three outputs, valence, arousal and emotion score.
