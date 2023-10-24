@@ -11,7 +11,7 @@ To help with the implementation on DigitalOcean, please follow the links
 https://docs.digitalocean.com/products/app-platform/getting-started/sample-apps/flask/  
 https://docs.digitalocean.com/products/app-platform/how-to/deploy-from-container-images/
 
-The deployement is done using container via Dockerfile. Currently, we have used TensorFlow based one here.
+The deployement is done using container via Dockerfile. Currently, we have used TensorFlow based image here.
 Other DockerFiles can be utilised, with emphasis on the python and the related package versions.  
 
 A connection to github codebase would mean automatic refresh of the application when changes are made to the code.  
