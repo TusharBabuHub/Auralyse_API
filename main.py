@@ -276,7 +276,7 @@ if __name__ == "__main__":
     except:
         port = 12345  # If you don't provide any port the port will be set to 12345
 
-    app.run(debug=True)
+    app.run(debug=False)
     """This API is created to analyse audio and fond the emotions embedded in it.
        To do so, the audio is processed and passed through a tflite model.
        This model provides three outputs, valence, arousal and emotion score.
