@@ -43,7 +43,7 @@ numpy==1.24.3
 oauthlib==3.2.2
 opt-einsum==3.3.0
 packaging==23.2
-Pillow==10.1.0
+Pillow==10.2.0
 platformdirs==3.11.0
 pooch==1.7.0
 protobuf==4.24.4
